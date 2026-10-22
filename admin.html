@@ -49,6 +49,7 @@
         <button class="tab active" type="button" data-view="requests">待处理</button>
         <button class="tab" type="button" data-view="members">全部成员</button>
         <button class="tab" type="button" data-view="invites">邀请链接</button>
+        <button class="tab" type="button" data-view="menuPhotos">菜单照片</button>
       </nav>
 
       <section class="view active" id="requests">
@@ -74,6 +75,10 @@
           <article class="card"><div class="card-head"><div><h3>使用说明</h3><p class="subtle">发给对应朋友即可</p></div></div><ol class="subtle"><li>朋友打开链接，注册或登录自己的账号。</li><li>朋友确认加入并填写问卷。</li><li>个性化申请会出现在“待处理”。</li><li>已使用或不再需要的邀请可以停用。</li></ol></article>
         </div>
         <article class="card" style="margin-top:14px"><div class="card-head"><div><h3>邀请记录</h3><p class="subtle">历史令牌不会再次显示。</p></div></div><div class="table-scroll"><table><thead><tr><th>创建时间</th><th>有效期</th><th>使用情况</th><th>状态</th><th></th></tr></thead><tbody id="inviteTableBody"></tbody></table></div></article>
+      </section>
+
+      <section class="view" id="menuPhotos">
+        <article class="card" data-menu-photos="admin"><p class="subtle">菜单照片查看器正在加载…</p></article>
       </section>
     </div>
 
@@ -117,6 +122,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.js"></script>
   <script src="js/plan-engine.js"></script>
+  <link rel="stylesheet" href="css/menu-photos.css">
+  <script src="js/menu-photos.js" defer></script>
   <script src="js/supabase-config.js"></script>
   <script src="js/admin.js"></script>
 </body>

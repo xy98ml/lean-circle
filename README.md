@@ -18,6 +18,8 @@
 5. 把 `supabase-make-admin.sql` 中的占位邮箱替换为真实管理员邮箱，再执行一次。
 6. 打开 `admin.html`，创建一条测试邀请并完成端到端验收。
 
+7. 如需朋友用照片提交单日或整周菜单，在好友协作迁移后执行 `supabase-menu-photos.sql`。该迁移创建私有照片桶和权限策略；用户及其对应管理员可查看，匿名用户和其他成员不可访问。完成 GitHub Pages 发布后即可使用。
+
 `js/supabase-config.js` 中只允许放 Supabase Project URL 和 publishable key。不要把 `service_role`、`sb_secret_...` 或数据库密码写进网页或提交到 Git。
 
 ## 发布到 GitHub Pages

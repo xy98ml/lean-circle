@@ -648,6 +648,10 @@
         <div class="inline-actions" style="margin-top:15px"><button class="btn primary" id="submitMenuButton" type="button">提交给管理员</button><button class="btn ghost is-hidden" id="cancelMenuEditButton" type="button">取消修改</button><span class="subtle" id="menuSubmissionMessage" role="status" aria-live="polite"></span></div>
       </article>
 
+      <article class="card" data-menu-photos="member" style="margin-top:16px">
+        <p class="subtle">照片上传组件正在加载…</p>
+      </article>
+
       <article class="card soft" style="margin-top:16px">
         <div class="card-head"><div><h3>我的提交记录</h3><p>已下发的原始提交不可再修改；需要变化时请新建一周。</p></div><span class="status" id="menuSubmissionCount">0 条</span></div>
         <div class="submission-list" id="menuSubmissionList"><div class="menu-empty">登录后查看自己的提交。</div></div>
@@ -711,6 +715,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.js"></script>
   <script src="js/supabase-config.js"></script>
   <script src="js/menu-data.js"></script>
+  <link rel="stylesheet" href="css/menu-photos.css">
+  <script src="js/menu-photos.js" defer></script>
   <script src="js/dashboard-state.js"></script>
   <script>
     (() => {

@@ -1,0 +1,12 @@
+.photo-pickers, .photo-list-head { margin-top: 16px; }
+.photo-pickers label { position: relative; overflow: hidden; cursor: pointer; }
+.photo-file { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.photo-pickers label:focus-within { outline: 2px solid #7367ce; outline-offset: 3px; }
+.photo-preview { display: block; max-width: 100%; max-height: 360px; margin: 12px 0; object-fit: contain; }
+.photo-preview[hidden] { display: none; }
+.photo-entry { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 0; border-bottom: 1px solid #ddd; }
+.photo-entry > div { min-width: 0; overflow-wrap: anywhere; }
+.photo-original { display: block; width: 100%; height: auto; object-fit: contain; }
+.photo-form label { display: block; }
+.photo-form .field input, .photo-form .field select { display: block; width: 100%; box-sizing: border-box; margin-top: 6px; }
+.photo-message { overflow-wrap: anywhere; }
