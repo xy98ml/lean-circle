@@ -1,0 +1,24 @@
+# Local/private material kept beside the static app
+.analysis_tmp/
+.codex_artifacts/
+output/
+research/
+stickers/
+travel-plans/
+travel-plans-private-sources/
+douyin-sticker-export/
+douyin-sticker-export */
+docs/plans/
+supabase-friends-schema-paste.txt
+supabase-friends-schema-view.html
+supabase-sql-utf8-view.html
+*.docx
+*.zip
+*.plugin
+zunyi-weekend-plan.html
+
+# Local tooling and OS noise
+.DS_Store
+tmp/
+*.log
+

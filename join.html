@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f7f8fd">
+  <title>加入减脂协作计划</title>
+  <link rel="stylesheet" href="css/coaching.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <a class="brand" href="fat-loss-dashboard.html"><span class="brand-mark" aria-hidden="true">✦</span><strong>减脂协作计划</strong></a>
+      <div class="top-actions"><span class="status" id="joinStatus">检查邀请</span><button class="btn small ghost hidden" id="signOutButton" type="button">退出登录</button></div>
+    </header>
+
+    <section class="hero">
+      <p class="eyebrow">Private invitation</p>
+      <h1>建立适合你的减脂计划</h1>
+      <p class="lead">填写真实情况，选择快速套用或个性化设计。你的原始记录由你填写，管理员只能查看并调整计划。</p>
+    </section>
+
+    <section class="card" id="invalidInvite">
+      <div class="card-head"><div><h2>需要有效邀请</h2><p class="subtle">请从管理员发送的完整链接进入。</p></div><span class="status danger">无法继续</span></div>
+      <p class="notice danger">链接中没有邀请令牌，或者链接复制不完整。请联系管理员重新发送。</p>
+    </section>
+
+    <section class="card hidden" id="authCard">
+      <div class="card-head"><div><h2>先登录自己的账号</h2><p class="subtle">以后在不同设备上使用相同邮箱登录即可同步。</p></div><span class="status">账号</span></div>
+      <div class="form-grid">
+        <div class="field"><label for="authEmail">邮箱</label><input id="authEmail" type="email" autocomplete="email" placeholder="name@example.com"></div>
+        <div class="field"><label for="authPassword">密码</label><input id="authPassword" type="password" autocomplete="current-password" minlength="8" placeholder="至少 8 位"></div>
+      </div>
+      <div class="inline-actions" style="margin-top:15px"><button class="btn primary" id="signInButton" type="button">登录</button><button class="btn" id="signUpButton" type="button">注册</button></div>
+      <p class="subtle" style="margin-top:12px">首次注册通常需要打开邮箱确认链接。确认后请回到这条邀请链接继续。</p>
+      <p class="message" id="authMessage" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="card hidden" id="accountSettings">
+      <div class="card-head"><div><h2>账号管理</h2><p class="subtle">邮箱用于登录；你可以随时自己修改密码。</p></div><span class="status good">已登录</span></div>
+      <div class="form-grid">
+        <div class="field"><label for="newPassword">新密码</label><input id="newPassword" type="password" autocomplete="new-password" minlength="8" placeholder="至少 8 位"></div>
+        <div class="field"><label for="confirmPassword">确认新密码</label><input id="confirmPassword" type="password" autocomplete="new-password" minlength="8" placeholder="再次输入"></div>
+      </div>
+      <div class="inline-actions" style="margin-top:15px"><button class="btn" id="updatePasswordButton" type="button">保存新密码</button></div>
+      <p class="message" id="passwordMessage" role="status" aria-live="polite"></p>
+    </section>
+
+    <form class="hidden" id="questionnaireForm">
+      <div class="section-head"><div><h2>基础资料</h2><p>用于计算合理的起点，不追求虚假的精确。以后重新提交会生成新的历史版本，旧资料不会被覆盖。</p></div><span class="status good" id="accountLabel">已登录</span></div>
+      <section class="card">
+        <div class="form-grid three">
+          <div class="field"><label for="nickname">昵称</label><input id="nickname" name="nickname" required maxlength="40" placeholder="朋友怎么称呼你"></div>
+          <div class="field"><label for="age">年龄</label><input id="age" name="age" required type="number" min="18" max="100" inputmode="numeric"></div>
+          <div class="field"><label for="sex">性别</label><select id="sex" name="sex" required><option value="">请选择</option><option value="male">男</option><option value="female">女</option><option value="other">其他/不便说明</option></select></div>
+          <div class="field"><label for="height">身高 cm</label><input id="height" name="height" required type="number" min="120" max="230" step="0.1" inputmode="decimal"></div>
+          <div class="field"><label for="weight">当前体重 kg</label><input id="weight" name="weight" required type="number" min="35" max="250" step="0.1" inputmode="decimal"></div>
+          <div class="field"><label for="waist">腰围 cm（可选）</label><input id="waist" name="waist" type="number" min="40" max="220" step="0.1" inputmode="decimal"></div>
+          <div class="field"><label for="bodyFat">估计体脂 %（可选）</label><input id="bodyFat" name="body_fat" type="number" min="3" max="60" step="0.5" inputmode="decimal"></div>
+          <div class="field"><label for="weightTrend">过去 4 周体重趋势</label><select id="weightTrend" name="weight_trend"><option value="unknown">不确定</option><option value="rising">逐渐上升</option><option value="stable">基本稳定</option><option value="falling">逐渐下降</option><option value="fluctuating">起伏较大</option></select></div>
+          <div class="field"><label for="dailySteps">平均每日步数</label><input id="dailySteps" name="daily_steps" type="number" min="0" max="50000" step="500" placeholder="例如 8000"></div>
+        </div>
+      </section>
+
+      <div class="section-head"><div><h2>目标与训练</h2><p>告诉我们你想做到什么，以及目前能稳定做到什么。</p></div></div>
+      <section class="card">
+        <div class="form-grid three">
+          <div class="field"><label for="goalWeight">目标体重 kg</label><input id="goalWeight" name="goal_weight_kg" required type="number" min="35" max="250" step="0.1"></div>
+          <div class="field"><label for="targetWeeks">期望周期（周）</label><input id="targetWeeks" name="target_weeks" required type="number" min="4" max="104" value="12"></div>
+          <div class="field"><label for="priority">最优先目标</label><select id="priority" name="priority"><option value="fat_loss">减脂和腰腹</option><option value="health">改善健康指标</option><option value="performance">保持或提升力量</option><option value="habit">建立稳定习惯</option></select></div>
+          <div class="field"><label for="trainingYears">健身年限</label><input id="trainingYears" name="training_years" type="number" min="0" max="50" step="0.5" value="0"></div>
+          <div class="field"><label for="trainingDays">每周可训练天数</label><input id="trainingDays" name="training_days" required type="number" min="0" max="7" value="3"></div>
+          <div class="field"><label for="cardioSessions">当前每周有氧次数</label><input id="cardioSessions" name="cardio_sessions" type="number" min="0" max="14" value="0"></div>
+          <div class="field"><label for="cardioMinutes">每次有氧时长（分钟）</label><input id="cardioMinutes" name="cardio_minutes" type="number" min="0" max="300" value="20"></div>
+        </div>
+        <div class="form-grid" style="margin-top:14px">
+          <div class="field"><label for="trainingSchedule">当前训练安排</label><textarea id="trainingSchedule" name="training_schedule" placeholder="例如：一周四练，胸背腿肩"></textarea></div>
+          <div class="field"><label for="strengthNotes">主要力量表现（可选）</label><textarea id="strengthNotes" name="strength_notes" placeholder="例如：卧推、深蹲、引体向上表现"></textarea></div>
+          <div class="field"><label for="trainingEnvironment">可用场地和器械</label><textarea id="trainingEnvironment" name="training_environment" placeholder="例如：商业健身房，器械齐全；或居家哑铃"></textarea></div>
+        </div>
+      </section>
+
+      <div class="section-head"><div><h2>饮食与生活</h2><p>真实的日常比“理想的一天”更有参考价值。</p></div></div>
+      <section class="card">
+        <div class="form-grid three">
+          <div class="field"><label for="calorieTracking">是否记录热量</label><select id="calorieTracking" name="calorie_tracking"><option value="none">基本不记录</option><option value="sometimes">偶尔估算</option><option value="regular">经常记录</option></select></div>
+          <div class="field"><label for="proteinIntake">目前每日蛋白质 g（可选）</label><input id="proteinIntake" name="protein_intake" type="number" min="0" max="400"></div>
+          <div class="field"><label for="sleepHours">平均睡眠 h</label><input id="sleepHours" name="sleep_hours" type="number" min="0" max="16" step="0.5"></div>
+          <div class="field"><label for="takeoutFrequency">外卖/聚餐频率</label><select id="takeoutFrequency" name="takeout_frequency"><option value="rare">很少</option><option value="weekly">每周 1–2 次</option><option value="often">每周 3 次以上</option></select></div>
+          <div class="field"><label for="alcoholFrequency">饮酒频率</label><select id="alcoholFrequency" name="alcohol_frequency"><option value="none">不喝</option><option value="monthly">每月少量</option><option value="weekly">每周</option><option value="often">频繁</option></select></div>
+          <div class="field"><label for="sugaryDrinks">含糖饮料频率</label><select id="sugaryDrinks" name="sugary_drinks"><option value="none">基本不喝</option><option value="monthly">每月少量</option><option value="weekly">每周 1–2 次</option><option value="often">每周 3 次以上</option></select></div>
+          <div class="field"><label for="stressLevel">近期压力</label><select id="stressLevel" name="stress_level"><option value="low">较低</option><option value="medium">一般</option><option value="high">较高</option></select></div>
+        </div>
+        <div class="form-grid" style="margin-top:14px">
+          <div class="field"><label for="usualMeals">常见三餐与饮品</label><textarea id="usualMeals" name="usual_meals" placeholder="工作日通常怎么吃，常喝什么"></textarea></div>
+          <div class="field"><label for="dietPreferences">忌口、过敏和偏好</label><textarea id="dietPreferences" name="diet_preferences" placeholder="例如：乳糖不耐、素食、不吃海鲜"></textarea></div>
+          <div class="field"><label for="workSchedule">工作和作息情况</label><textarea id="workSchedule" name="work_schedule" placeholder="例如：朝九晚六、轮班、经常出差"></textarea></div>
+        </div>
+      </section>
+
+      <div class="section-head"><div><h2>安全筛查</h2><p>命中以下情况时不会自动生成普通减脂计划。</p></div></div>
+      <section class="card">
+        <div class="choice-grid">
+          <label class="choice"><input type="checkbox" name="medical_condition"><span><strong>慢性疾病或重要伤病</strong><span>包括心血管、代谢疾病、严重关节或脊柱问题等</span></span></label>
+          <label class="choice"><input type="checkbox" name="acute_symptoms"><span><strong>近期出现异常症状</strong><span>例如运动时胸痛、晕厥、明显心悸或持续头晕</span></span></label>
+          <label class="choice"><input type="checkbox" name="eating_disorder"><span><strong>进食障碍相关经历</strong><span>包括暴食、催吐或极端限制饮食</span></span></label>
+          <label class="choice"><input type="checkbox" name="recent_surgery"><span><strong>近期手术或术后恢复</strong><span>需要先确认医生允许进行热量限制和训练</span></span></label>
+          <label class="choice"><input type="checkbox" name="pregnancy"><span><strong>孕期或产后恢复期</strong><span>需要医生或专业人士给出个体化建议</span></span></label>
+        </div>
+        <div class="form-grid" style="margin-top:14px">
+          <div class="field"><label for="injuryNotes">伤病或疾病说明（可选）</label><textarea id="injuryNotes" name="injury_notes"></textarea></div>
+          <div class="field"><label for="medications">正在使用的药物（可选）</label><textarea id="medications" name="medications"></textarea></div>
+        </div>
+      </section>
+
+      <div class="section-head"><div><h2>选择计划方式</h2><p>以后仍然可以由管理员继续调整。</p></div></div>
+      <section class="card accent">
+        <div class="choice-grid">
+          <label class="choice"><input type="radio" name="route" value="template" checked><span><strong>🚀 快速套用</strong><span>根据基础数据立即生成热量、蛋白质、步数和训练起点</span></span></label>
+          <label class="choice"><input type="radio" name="route" value="personalized"><span><strong>🎯 个性化设计</strong><span>提交后进入管理员待设计列表，适合需求更复杂的人</span></span></label>
+        </div>
+        <label class="choice" style="margin-top:12px"><input id="consent" name="consent" type="checkbox" required><span><strong>我确认加入这项熟人协作计划</strong><span>总管理员可以查看我填写的资料、问卷、目标和每日执行数据，并据此调整我的计划；其他普通成员无法查看。</span></span></label>
+        <div class="inline-actions" style="margin-top:16px"><button class="btn primary" id="submitButton" type="submit">提交并开始</button><span class="subtle">请按真实情况填写；重新提交会保留每一次资料版本，方便以后回顾变化。</span></div>
+        <p class="message" id="formMessage" role="status" aria-live="polite"></p>
+      </section>
+    </form>
+
+    <section class="card accent hidden" id="successCard">
+      <div class="card-head"><div><h2>已经加入计划</h2><p class="subtle" id="successSubtitle">资料已经提交。</p></div><span class="status good">完成</span></div>
+      <div class="grid four hidden" id="targetSummary"></div>
+      <p class="notice" id="resultNotice"></p>
+      <div class="inline-actions" style="margin-top:15px"><a class="btn primary" href="fat-loss-dashboard.html">进入我的面板</a><button class="btn" id="editAgainButton" type="button">重新填写</button></div>
+    </section>
+
+    <footer class="footer">这是一项熟人之间的健身协作工具，不提供医疗诊断。存在疾病、孕产期、未成年人或异常症状时，请优先咨询医生或合格专业人士。</footer>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.js"></script>
+  <script src="js/plan-engine.js"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/join.js"></script>
+</body>
+</html>
+

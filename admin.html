@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f7f8fd">
+  <title>减脂协作管理台</title>
+  <link rel="stylesheet" href="css/coaching.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <a class="brand" href="fat-loss-dashboard.html"><span class="brand-mark" aria-hidden="true">✦</span><strong>减脂协作管理台</strong></a>
+      <div class="top-actions"><span class="status account-label" id="adminAccount">未登录</span><a class="btn small" href="fat-loss-dashboard.html">个人面板</a><button class="btn small ghost hidden" id="signOutButton" type="button">退出</button></div>
+    </header>
+
+    <section class="hero">
+      <p class="eyebrow">Coach workspace</p>
+      <h1>看趋势，调计划，不改原始记录</h1>
+      <p class="lead">集中查看朋友的问卷和执行情况，用版本化计划记录每一次调整及原因。</p>
+    </section>
+
+    <section class="card" id="adminAuth">
+      <div class="card-head"><div><h2>管理员登录</h2><p class="subtle">只有写入 `app_admins` 的账号可以进入。</p></div><span class="status">安全验证</span></div>
+      <div class="form-grid">
+        <div class="field"><label for="authEmail">邮箱</label><input id="authEmail" type="email" autocomplete="email"></div>
+        <div class="field"><label for="authPassword">密码</label><input id="authPassword" type="password" autocomplete="current-password"></div>
+      </div>
+      <button class="btn primary" id="signInButton" type="button" style="margin-top:15px">登录管理台</button>
+      <p class="message" id="authMessage" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="card hidden" id="accessDenied">
+      <div class="card-head"><div><h2>当前账号不是总管理员</h2><p class="subtle">普通成员无法查看其他人的信息。</p></div><span class="status danger">拒绝访问</span></div>
+      <p class="notice warning">请先注册并验证你的管理员邮箱，然后在 Supabase SQL Editor 执行 `supabase-make-admin.sql`。</p>
+    </section>
+
+    <div class="hidden" id="adminApp">
+      <div class="grid four" aria-label="协作概览">
+        <article class="card metric"><span class="subtle">活跃成员</span><strong id="metricMembers">0</strong></article>
+        <article class="card metric"><span class="subtle">待设计</span><strong id="metricPending">0</strong></article>
+        <article class="card metric"><span class="subtle">已发布计划</span><strong id="metricPlans">0</strong></article>
+        <article class="card metric"><span class="subtle">近 7 天记录</span><strong id="metricLogs">0</strong></article>
+      </div>
+
+      <div class="section-head"><div><h2>协作管理</h2><p id="lastRefresh">正在读取数据…</p></div><div class="inline-actions"><button class="btn small" id="refreshButton" type="button">刷新数据</button></div></div>
+      <nav class="tabs" aria-label="管理视图">
+        <button class="tab active" type="button" data-view="requests">待处理</button>
+        <button class="tab" type="button" data-view="members">全部成员</button>
+        <button class="tab" type="button" data-view="invites">邀请链接</button>
+      </nav>
+
+      <section class="view active" id="requests">
+        <div class="card" style="margin-top:14px"><div class="card-head"><div><h3>待设计与风险提示</h3><p class="subtle">按提交时间排序，打开成员即可查看完整问卷。</p></div><span class="status warn" id="pendingBadge">0 项</span></div><div class="list" id="requestList"></div></div>
+      </section>
+
+      <section class="view" id="members">
+        <div class="card" style="margin-top:14px"><div class="card-head"><div><h3>成员列表</h3><p class="subtle">普通成员之间无法看到彼此。</p></div><span class="status" id="memberBadge">0 人</span></div><div class="list" id="memberList"></div></div>
+      </section>
+
+      <section class="view" id="invites">
+        <div class="grid two" style="margin-top:14px">
+          <article class="card accent">
+            <div class="card-head"><div><h3>创建专属邀请</h3><p class="subtle">令牌只在创建时显示一次。</p></div><span class="status good">管理员</span></div>
+            <div class="form-grid">
+              <div class="field"><label for="inviteDays">有效天数</label><input id="inviteDays" type="number" min="1" max="90" value="7"></div>
+              <div class="field"><label for="inviteUses">可加入人数</label><input id="inviteUses" type="number" min="1" max="50" value="1"></div>
+            </div>
+            <button class="btn primary" id="createInviteButton" type="button" style="margin-top:15px">生成邀请链接</button>
+            <p class="message" id="inviteMessage" role="status" aria-live="polite"></p>
+            <div class="field hidden" id="newInviteResult"><label for="newInviteLink">刚生成的链接</label><input id="newInviteLink" readonly><button class="btn" id="copyInviteButton" type="button">复制链接</button></div>
+          </article>
+          <article class="card"><div class="card-head"><div><h3>使用说明</h3><p class="subtle">发给对应朋友即可</p></div></div><ol class="subtle"><li>朋友打开链接，注册或登录自己的账号。</li><li>朋友确认加入并填写问卷。</li><li>个性化申请会出现在“待处理”。</li><li>已使用或不再需要的邀请可以停用。</li></ol></article>
+        </div>
+        <article class="card" style="margin-top:14px"><div class="card-head"><div><h3>邀请记录</h3><p class="subtle">历史令牌不会再次显示。</p></div></div><div class="table-scroll"><table><thead><tr><th>创建时间</th><th>有效期</th><th>使用情况</th><th>状态</th><th></th></tr></thead><tbody id="inviteTableBody"></tbody></table></div></article>
+      </section>
+    </div>
+
+    <footer class="footer">管理员可以读取已加入成员的数据并发布计划，但数据库策略禁止管理员修改成员的原始每日记录。</footer>
+  </main>
+
+  <dialog id="memberDialog" aria-labelledby="memberDialogTitle">
+    <div class="dialog-head"><div><h3 id="memberDialogTitle">成员详情</h3><p class="subtle" id="memberDialogSubtitle"></p></div><button class="btn small ghost" id="closeMemberDialog" type="button">关闭</button></div>
+    <div class="dialog-body">
+      <div class="grid four" id="memberMetrics"></div>
+      <div class="section-head"><div><h2>问卷信息</h2><p>成员原始填写内容，只读。</p></div></div>
+      <div class="answer-grid" id="questionnaireAnswers"></div>
+      <div class="section-head"><div><h2>执行趋势</h2><p id="memberLogSummary">按实际日期展示记录。</p></div><div class="field"><label for="memberLogWindow">观察周期</label><select id="memberLogWindow"><option value="7">近 7 天</option><option value="14" selected>近 14 天</option><option value="30">近 30 天</option></select></div></div>
+      <div class="table-scroll"><table><thead><tr><th>日期</th><th>体重</th><th>热量</th><th>蛋白质</th><th>步数</th><th>训练</th></tr></thead><tbody id="memberLogRows"></tbody></table></div>
+      <div class="section-head"><div><h2>发布新计划版本</h2><p>保存后不会覆盖历史版本。</p></div><span class="status" id="currentPlanVersion">尚无计划</span></div>
+      <form class="card soft" id="planForm">
+        <div class="form-grid three">
+          <div class="field"><label for="caloriesMin">最低热量 kcal</label><input id="caloriesMin" required type="number" min="1000" max="6000"></div>
+          <div class="field"><label for="caloriesMax">最高热量 kcal</label><input id="caloriesMax" required type="number" min="1000" max="6500"></div>
+          <div class="field"><label for="stepsTarget">每日步数</label><input id="stepsTarget" required type="number" min="1000" max="50000" step="500"></div>
+          <div class="field"><label for="proteinMin">最低蛋白质 g</label><input id="proteinMin" required type="number" min="30" max="350"></div>
+          <div class="field"><label for="proteinMax">最高蛋白质 g</label><input id="proteinMax" required type="number" min="30" max="400"></div>
+          <div class="field"><label for="strengthDays">每周力量次数</label><input id="strengthDays" required type="number" min="0" max="7"></div>
+          <div class="field"><label for="cardioCount">每周有氧次数</label><input id="cardioCount" required type="number" min="0" max="14"></div>
+          <div class="field"><label for="cardioMinutes">每次有氧分钟</label><input id="cardioMinutes" required type="number" min="0" max="300"></div>
+          <div class="field"><label for="planGoalWeight">目标体重 kg</label><input id="planGoalWeight" type="number" min="35" max="250" step="0.1"></div>
+          <div class="field"><label for="planWeeks">计划周期（周）</label><input id="planWeeks" type="number" min="1" max="104"></div>
+        </div>
+        <div class="form-grid" style="margin-top:14px">
+          <div class="field"><label for="trainingDetails">训练安排</label><textarea id="trainingDetails" placeholder="胸、背、腿、肩或其他具体安排"></textarea></div>
+          <div class="field"><label for="nutritionDetails">饮食建议</label><textarea id="nutritionDetails" placeholder="餐盘结构、外卖策略、饮品等"></textarea></div>
+        </div>
+        <div class="field" style="margin-top:14px"><label for="adjustmentReason">本次调整原因（必填）</label><textarea id="adjustmentReason" required minlength="2" placeholder="例如：近两周平均下降不足 0.2 kg，先减少约 150 kcal"></textarea></div>
+        <div class="inline-actions" style="margin-top:15px"><button class="btn primary" id="publishPlanButton" type="submit">发布新版本</button><span class="subtle">成员刷新个人面板后即可看到。</span></div>
+        <p class="message" id="planMessage" role="status" aria-live="polite"></p>
+      </form>
+      <div class="section-head"><div><h2>计划历史</h2><p>按版本从新到旧。</p></div></div>
+      <div class="list" id="planHistory"></div>
+    </div>
+  </dialog>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.js"></script>
+  <script src="js/plan-engine.js"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
+
