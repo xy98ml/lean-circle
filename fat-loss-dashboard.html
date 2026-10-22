@@ -208,6 +208,18 @@
     .card.accent { background: linear-gradient(145deg, color-mix(in srgb, var(--primary) 13%, var(--surface-solid)), color-mix(in srgb, var(--teal) 9%, var(--surface-solid))); }
     .card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 16px; }
     .card-head p, .subtle { color: var(--muted); font-size: 13px; margin: 0; }
+    .plan-reading-layout { display: grid; grid-template-columns: minmax(220px, .8fr) minmax(0, 1.7fr); gap: 24px; align-items: start; }
+    .plan-reading-layout > * { min-width: 0; }
+    .plan-summary { padding: 20px; border-radius: 18px; background: var(--surface-solid); border: 1px solid var(--line); }
+    .plan-summary h4, .plan-detail-section h4 { margin: 0 0 12px; font-size: 16px; }
+    .plan-summary ul { display: grid; gap: 16px; list-style: none; padding: 0; margin: 16px 0 0; }
+    .plan-summary li span { display: block; color: var(--muted); font-size: 12px; margin-bottom: 4px; }
+    .plan-summary li strong { display: block; font-size: 17px; line-height: 1.5; }
+    .plan-detail-sections { display: grid; gap: 16px; }
+    .plan-detail-section { padding: 18px 20px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+    .plan-detail-section p, .plan-note-text { margin: 0; white-space: pre-line; font-size: 14px; line-height: 1.85; color: var(--muted); overflow-wrap: anywhere; }
+    .plan-detail-section ul { display: grid; gap: 9px; padding-left: 20px; margin: 0; font-size: 14px; line-height: 1.85; }
+    @media (max-width: 760px) { .plan-reading-layout { grid-template-columns: 1fr; gap: 18px; } .plan-summary ul { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     .icon-box { width: 38px; height: 38px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 12px; background: var(--surface-2); font-size: 18px; }
     .metric-label { color: var(--muted); font-size: 13px; }
     .metric-value { margin: 4px 0 8px; font-size: 30px; font-weight: 600; letter-spacing: -.04em; }
@@ -502,9 +514,9 @@
           <div class="nutrition-target"><span class="metric-label">步数</span><strong id="planSteps">—</strong><small class="subtle">每天</small></div>
           <div class="nutrition-target"><span class="metric-label">训练</span><strong id="planTraining">—</strong><small class="subtle">力量 + 有氧</small></div>
         </div>
-        <div class="grid two" id="memberPlanDetails" style="margin-top:14px">
-          <div class="notice"><strong>训练安排</strong><p class="subtle" id="planTrainingDetails">等待管理员发布</p></div>
-          <div class="notice"><strong>饮食建议</strong><p class="subtle" id="planNutritionDetails">等待管理员发布</p></div>
+        <div class="plan-reading-layout" id="memberPlanDetails" style="margin-top:24px">
+          <aside class="plan-summary"><h3>执行总结</h3><p class="subtle">先看目标，再按右侧建议安排</p><ul id="planQuickSummary"></ul></aside>
+          <div><h3>详细说明</h3><div class="plan-detail-sections" id="planNutritionDetails"></div><section class="plan-detail-section" style="margin-top:16px"><h4>训练怎么安排</h4><p class="plan-note-text" id="planTrainingDetails">等待管理员发布</p></section></div>
         </div>
       </article>
 
@@ -591,7 +603,7 @@
         </article>
       </div>
 
-      <article class="card is-hidden" id="personalNutritionCard" style="margin-top:16px"><h3>我的饮食与食物建议</h3><p id="personalNutritionAdvice" style="white-space:pre-wrap;margin-bottom:0"></p></article>
+      <article class="card is-hidden" id="personalNutritionCard" style="margin-top:16px"><div class="plan-reading-layout"><aside class="plan-summary"><h3>饮食总结</h3><p class="subtle">一天的核心目标</p><ul id="nutritionQuickSummary"></ul></aside><div><h3>食物与执行细节</h3><div class="plan-detail-sections" id="personalNutritionAdvice"></div></div></div></article>
 
       <div class="grid three" style="margin-top:16px">
         <article class="card"><div class="card-head"><div><h3>家庭餐</h3><p>按餐盘比例组合</p></div><span class="status good">优先</span></div><ul class="rule-list"><li>一掌半至两掌低脂蛋白质</li><li>一拳至一拳半主食</li><li>两拳不同颜色的蔬菜</li><li>调味油与酱汁单独估算</li></ul></article>
@@ -953,6 +965,28 @@
       }
 
       function renderPersonalPlanDetails(version) {
+        const formatAdvice = text => String(text || '').split(/\n\s*\n/).map((paragraph, index) => {
+          const headings = [
+            [/^视频公式/, '计算依据'], [/^每日/, '每日营养'], [/^优先食物/, '食物选择'],
+            [/^早餐/, '三餐安排'], [/^晚餐/, '晚餐轮换'], [/^调料/, '调味与用油'],
+            [/^饮品/, '饮品与补剂'], [/^每天/, '记录与调整']
+          ];
+          const title = headings.find(([pattern]) => pattern.test(paragraph.trim()))?.[1] || `饮食建议 ${index + 1}`;
+          const sentences = paragraph.trim().match(/[^。！？\n]+[。！？]?/g) || [];
+          return sentences.length ? `<section class="plan-detail-section"><h4>${title}</h4><ul>${sentences.map(sentence => `<li>${escapeHTML(sentence.trim())}</li>`).join('')}</ul></section>` : '';
+        }).join('');
+        const summary = version ? [
+          ['每日热量', `${version.calories_min}–${version.calories_max} kcal`],
+          ['蛋白质', `${version.protein_min}–${version.protein_max} g / 天`],
+          ['脂肪 / 碳水', `${version.fat_min ?? '—'}–${version.fat_max ?? '—'} / ${version.carb_min ?? '—'}–${version.carb_max ?? '—'} g`],
+          ['每日步数', `${version.steps_target} 步`],
+          ['每周训练', `力量 ${version.strength_days} 次 · 有氧 ${version.cardio_sessions} 次`],
+          ['每次有氧', `${version.cardio_minutes} 分钟`]
+        ].map(([label, value]) => `<li><span>${label}</span><strong>${escapeHTML(value)}</strong></li>`).join('') : '';
+        document.getElementById('planQuickSummary').innerHTML = summary;
+        document.getElementById('nutritionQuickSummary').innerHTML = summary;
+        const advice = formatAdvice(version?.nutrition_notes);
+        document.getElementById('planNutritionDetails').innerHTML = advice;
         const week = Array.isArray(version?.training_plan?.week) ? version.training_plan.week : [];
         const labels = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
         document.getElementById('trainingWeek').innerHTML = labels.map((label, index) => {
@@ -960,7 +994,7 @@
           return `<div class="training-day"><span class="day-name">${label}</span><strong>${escapeHTML(day?.title || '待安排')}</strong><p>${escapeHTML(day?.note || '按个人计划执行')}</p></div>`;
         }).join('');
         document.getElementById('trainingPlanNote').textContent = version?.training_plan?.note || '';
-        document.getElementById('personalNutritionAdvice').textContent = version?.nutrition_notes || '';
+        document.getElementById('personalNutritionAdvice').innerHTML = advice;
         document.getElementById('personalNutritionCard').classList.toggle('is-hidden', !version?.nutrition_notes);
         document.getElementById('nutritionFiber').textContent = version?.fiber_target ? `膳食纤维目标：${version.fiber_target} g / 天` : '';
       }
@@ -1050,7 +1084,6 @@
         document.getElementById('planSteps').textContent = Number(version.steps_target).toLocaleString('zh-CN');
         document.getElementById('planTraining').textContent = `${version.strength_days} + ${version.cardio_sessions}`;
         document.getElementById('planTrainingDetails').textContent = version.training_plan?.note || '按当前训练频率稳定执行。';
-        document.getElementById('planNutritionDetails').textContent = version.nutrition_notes || '按热量和蛋白质目标灵活安排三餐。';
         document.getElementById('metricProteinTarget').textContent = `/ ${proteinTarget} g`;
         document.getElementById('metricStepsTarget').textContent = `/ ${version.steps_target}`;
         document.getElementById('nutritionCalories').textContent = calorieTarget;
