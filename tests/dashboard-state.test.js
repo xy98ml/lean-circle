@@ -27,3 +27,9 @@ test('时间相同或都缺失时保留账号内已有记录', () => {
   const anonymous = { '2026-10-19': { weight: 79 } };
   assert.equal(mergeLogsByUpdatedAt(account, anonymous)['2026-10-19'].weight, 81);
 });
+
+test('已登录但尚无计划时使用计划状态文案，而不是登录提示', () => {
+  const source = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'fat-loss-dashboard.html'), 'utf8');
+  assert.match(source, /document\.getElementById\('hero-title'\)\.textContent = request && \['pending', 'designing'\]\.includes\(request\.status\)[\s\S]{0,100}'尚未下发个人计划'/);
+  assert.match(source, /document\.getElementById\('hero-title'\)\.textContent = version\.goal_weight_kg[\s\S]{0,100}'个人计划已就绪'/);
+});

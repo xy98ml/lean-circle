@@ -881,7 +881,10 @@
           state.syncBusyGeneration = null;
         }
         state.session = nextSession;
-        if (nextUserId) switchAccountStorage(nextUserId);
+        if (nextUserId) {
+          switchAccountStorage(nextUserId);
+          if (previousUserId !== nextUserId) document.getElementById('hero-title').textContent = '正在读取个人计划…';
+        }
         else if (previousUserId || activeStorageUserId) resetVisibleAccountData();
       }
 
@@ -959,6 +962,7 @@
         const [{ data: adminFlag }, { data: profile }, { data: plan }, { data: request }] = results;
         document.getElementById('adminPageButton').classList.toggle('is-hidden', !adminFlag);
         if (request?.status === 'blocked') {
+          document.getElementById('hero-title').textContent = '个人计划已暂停';
           document.getElementById('memberPlanCard').classList.remove('is-hidden');
           document.getElementById('memberPlanTitle').textContent = '计划已暂停，请先完成专业评估';
           document.getElementById('memberPlanReason').textContent = '最新安全筛查命中风险项，之前的普通减脂计划暂不继续执行。';
@@ -978,6 +982,9 @@
           return;
         }
         if (!plan) {
+          document.getElementById('hero-title').textContent = request && ['pending', 'designing'].includes(request.status)
+            ? '个人计划正在设计'
+            : '尚未下发个人计划';
           if (request && ['pending', 'designing'].includes(request.status)) {
             document.getElementById('memberPlanCard').classList.remove('is-hidden');
             document.getElementById('memberPlanTitle').textContent = '个性化计划正在设计';
@@ -1010,6 +1017,9 @@
         };
         const calorieTarget = Math.round((version.calories_min + version.calories_max) / 2);
         document.getElementById('memberPlanCard').classList.remove('is-hidden');
+        document.getElementById('hero-title').textContent = version.goal_weight_kg
+          ? `${state.planTargets.startWeight} → ${state.planTargets.goalWeight} kg`
+          : '个人计划已就绪';
         document.getElementById('memberPlanTitle').textContent = '我的个人计划';
         document.getElementById('memberPlanReason').textContent = version.adjustment_reason;
         const publishedLabel = new Date(version.published_at).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' });
@@ -1031,7 +1041,6 @@
         document.getElementById('logProtein').placeholder = proteinTarget;
         document.getElementById('logSteps').placeholder = version.steps_target;
         document.getElementById('executionFloor').innerHTML = `<strong>当前计划：</strong>${version.calories_min}–${version.calories_max} kcal、蛋白质 ${version.protein_min}–${version.protein_max} g、每天 ${Number(version.steps_target).toLocaleString('zh-CN')}+ 步、每周 ${version.strength_days} 次力量和 ${version.cardio_sessions} 次有氧。出现持续头晕、心悸、明显失眠、暴食或训练能力持续下降时，暂停扩大热量缺口并咨询专业人士。`;
-        if (version.goal_weight_kg) document.getElementById('hero-title').textContent = `${state.planTargets.startWeight} → ${state.planTargets.goalWeight} kg`;
         refreshMetrics();
         updateCalculator();
       }
