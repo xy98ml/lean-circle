@@ -89,7 +89,11 @@
     const items = sourceItems.map(candidateText).filter(Boolean);
     const note = String(meal.note ?? meal.portion_note ?? meal.portion ?? '').trim();
     if (!items.length && !note) return null;
-    return { type: type || `餐次 ${index + 1}`, items, note };
+    return {
+      type: type || `餐次 ${index + 1}`, items, note,
+      ...(['preferred', 'acceptable', 'caution'].includes(meal.recommendation) ? { recommendation: meal.recommendation } : {}),
+      ...(['low', 'medium', 'high'].includes(meal.energy_level) ? { energyLevel: meal.energy_level } : {})
+    };
   }
 
   function normalizeMenuAssignment(row) {

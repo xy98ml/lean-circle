@@ -580,6 +580,7 @@
             <div class="nutrition-target"><span class="metric-label">脂肪</span><strong id="nutritionFat">—</strong><small class="subtle">克每天</small></div>
             <div class="nutrition-target"><span class="metric-label">碳水</span><strong id="nutritionCarb">—</strong><small class="subtle">克每天</small></div>
           </div>
+          <p class="subtle" id="nutritionFiber" style="margin-top:14px"></p>
           <p class="subtle" style="margin-top:14px">偶尔一天略低于个人蛋白质目标不用补偿，重点看一周平均值。蛋白补充品只补缺口，不能替代正餐。</p>
         </article>
         <article class="card">
@@ -589,6 +590,8 @@
           </div>
         </article>
       </div>
+
+      <article class="card is-hidden" id="personalNutritionCard" style="margin-top:16px"><h3>我的饮食与食物建议</h3><p id="personalNutritionAdvice" style="white-space:pre-wrap;margin-bottom:0"></p></article>
 
       <div class="grid three" style="margin-top:16px">
         <article class="card"><div class="card-head"><div><h3>家庭餐</h3><p>按餐盘比例组合</p></div><span class="status good">优先</span></div><ul class="rule-list"><li>一掌半至两掌低脂蛋白质</li><li>一拳至一拳半主食</li><li>两拳不同颜色的蔬菜</li><li>调味油与酱汁单独估算</li></ul></article>
@@ -660,7 +663,7 @@
 
     <section id="training" class="view" aria-labelledby="training-title">
       <div class="section-head"><div><h2 id="training-title">训练与恢复</h2><p>登录后读取管理员为你下发的训练频率与恢复建议。</p></div><span class="status good">个人计划</span></div>
-      <div class="week-plan" aria-label="每周训练安排">
+      <div class="week-plan" id="trainingWeek" aria-label="每周训练安排">
         <div class="training-day"><span class="day-name">周一</span><strong>待安排</strong><p>按个人计划执行</p></div>
         <div class="training-day"><span class="day-name">周二</span><strong>待安排</strong><p>按个人计划执行</p></div>
         <div class="training-day"><span class="day-name">周三</span><strong>待安排</strong><p>按个人计划执行</p></div>
@@ -669,6 +672,7 @@
         <div class="training-day"><span class="day-name">周六</span><strong>待安排</strong><p>按个人计划执行</p></div>
         <div class="training-day"><span class="day-name">周日</span><strong>待安排</strong><p>按个人计划执行</p></div>
       </div>
+      <p class="subtle" id="trainingPlanNote" style="white-space:pre-wrap;margin-top:16px"></p>
       <div class="grid three" style="margin-top:16px">
         <article class="card"><div class="card-head"><div><h3>训练原则</h3><p>以当前下发计划为准</p></div><div class="icon-box" aria-hidden="true">力</div></div><ul class="rule-list"><li>根据个人基础安排动作与强度</li><li>恢复变差时及时反馈</li><li>不要为了追求消耗忽视动作质量</li></ul></article>
         <article class="card"><div class="card-head"><div><h3>有氧原则</h3><p>不影响力量与恢复</p></div><div class="icon-box" aria-hidden="true">心</div></div><ul class="rule-list"><li>选择自己能够稳定完成的方式</li><li>循序渐进调整频率和时长</li><li>异常不适时停止并寻求专业帮助</li></ul></article>
@@ -889,6 +893,7 @@
       }
 
       function resetPlanDisplay() {
+        renderPersonalPlanDetails(null);
         state.planTargets = { ...DEFAULT_PLAN_TARGETS };
         document.getElementById('memberPlanCard').classList.add('is-hidden');
         document.getElementById('hero-title').textContent = '登录查看目标';
@@ -947,9 +952,23 @@
         if (!signedIn) setCloudState(navigator.onLine ? 'local' : 'offline');
       }
 
+      function renderPersonalPlanDetails(version) {
+        const week = Array.isArray(version?.training_plan?.week) ? version.training_plan.week : [];
+        const labels = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+        document.getElementById('trainingWeek').innerHTML = labels.map((label, index) => {
+          const day = week[index];
+          return `<div class="training-day"><span class="day-name">${label}</span><strong>${escapeHTML(day?.title || '待安排')}</strong><p>${escapeHTML(day?.note || '按个人计划执行')}</p></div>`;
+        }).join('');
+        document.getElementById('trainingPlanNote').textContent = version?.training_plan?.note || '';
+        document.getElementById('personalNutritionAdvice').textContent = version?.nutrition_notes || '';
+        document.getElementById('personalNutritionCard').classList.toggle('is-hidden', !version?.nutrition_notes);
+        document.getElementById('nutritionFiber').textContent = version?.fiber_target ? `膳食纤维目标：${version.fiber_target} g / 天` : '';
+      }
+
       async function loadMemberPlan() {
         const context = sessionContext();
         if (!cloud || !context) return;
+        renderPersonalPlanDetails(null);
         const results = await Promise.all([
           cloud.rpc('is_app_admin'),
           cloud.from('profiles').select('*').eq('user_id', context.userId).maybeSingle(),
@@ -961,7 +980,8 @@
         if (firstError) throw firstError;
         const [{ data: adminFlag }, { data: profile }, { data: plan }, { data: request }] = results;
         document.getElementById('adminPageButton').classList.toggle('is-hidden', !adminFlag);
-        if (request?.status === 'blocked') {
+        if (request?.status === 'blocked' || (plan && plan.status !== 'active')) {
+          resetPlanDisplay();
           document.getElementById('hero-title').textContent = '个人计划已暂停';
           document.getElementById('memberPlanCard').classList.remove('is-hidden');
           document.getElementById('memberPlanTitle').textContent = '计划已暂停，请先完成专业评估';
@@ -1000,6 +1020,7 @@
         if (!isCurrentSession(context)) return;
         if (versionError) throw versionError;
         if (!version) return;
+        renderPersonalPlanDetails(version);
 
         const proteinTarget = Math.round((version.protein_min + version.protein_max) / 2);
         state.planTargets = {
@@ -1534,7 +1555,11 @@
         const chips = meal.items.length
           ? meal.items.map(item => `<span class="dish-chip">${escapeHTML(item)}</span>`).join('')
           : '<span class="subtle">管理员只填写了餐次备注</span>';
-        return `<div class="dish-list">${chips}</div><p class="menu-note">${escapeHTML(meal.note || '按下发分量执行；有疑问时联系管理员。')}</p>`;
+        const choices = { preferred: ['good', '优先选择'], acceptable: ['mid', '可以选择'], caution: ['warn', '谨慎选择'] };
+        const energy = { low: '相对热量较低', medium: '相对热量中等', high: '相对热量较高' };
+        const choice = choices[meal.recommendation];
+        const badges = `${choice ? `<span class="status ${choice[0]}">${choice[1]}</span>` : ''}${energy[meal.energyLevel] ? `<span class="status">${energy[meal.energyLevel]}</span>` : ''}`;
+        return `<div class="inline-actions">${badges}</div><div class="dish-list">${chips}</div><p class="menu-note">${escapeHTML(meal.note || '按下发分量执行；有疑问时联系管理员。')}</p>`;
       }
 
       function bindMealFocusButtons(root, dayDate) {
