@@ -11,11 +11,11 @@ test('云端训练周表与饮食说明可展示，清空时不保留上个账�
   const match = source.match(/      function renderPersonalPlanDetails\(version\) \{[\s\S]*?\n      \}/);
   assert.ok(match, '应有云端个人计划展示入口');
   const elements = new Map();
-  const document = { getElementById(id) {
+  const document = { querySelectorAll() { return []; }, querySelector(selector) { return this.getElementById(selector); }, getElementById(id) {
     if (!elements.has(id)) elements.set(id, { textContent: '', innerHTML: '', classList: { toggle() {} } });
     return elements.get(id);
   } };
-  const sandbox = { document, escapeHTML };
+  const sandbox = { document, escapeHTML, updatePlanDetailControls() {} };
   vm.runInNewContext(match[0] + '\nthis.render = renderPersonalPlanDetails;', sandbox);
   sandbox.render({ calories_min: 1800, calories_max: 2000, protein_min: 120, protein_max: 130, training_plan: { note: '训练说明', week: [{ title: '<img src=x>', note: '保留余力' }] }, nutrition_notes: '个人饮食建议。第二条建议。\n\n调料：<img>少油。', fiber_target: 28 });
   assert.match(document.getElementById('trainingWeek').innerHTML, /&lt;img src=x&gt;/);
@@ -27,6 +27,9 @@ test('云端训练周表与饮食说明可展示，清空时不保留上个账�
   assert.match(advice, /调味与用油/);
   assert.match(advice, /&lt;img&gt;/);
   assert.equal((advice.match(/<li>/g) || []).length, 3);
+  assert.equal((advice.match(/<details /g) || []).length, 2);
+  assert.equal((advice.match(/<summary>/g) || []).length, 2);
+  assert.doesNotMatch(advice, /<details[^>]*\sopen/);
   assert.match(document.getElementById('nutritionFiber').textContent, /28/);
   sandbox.render(null);
   assert.doesNotMatch(document.getElementById('trainingWeek').innerHTML, /余力/);
@@ -35,6 +38,29 @@ test('云端训练周表与饮食说明可展示，清空时不保留上个账�
   assert.equal(document.getElementById('planQuickSummary').innerHTML, '');
   assert.equal(document.getElementById('trainingPlanNote').textContent, '');
   assert.equal(document.getElementById('nutritionFiber').textContent, '');
+});
+
+test('全部展开和收起独立控制当前分栏，并跟随单项展开状态更新', () => {
+  const source = fs.readFileSync(require('node:path').join(__dirname, '..', 'fat-loss-dashboard.html'), 'utf8');
+  const match = source.match(/      function updatePlanDetailControls\(\) \{[\s\S]*?\n      \}/);
+  const groups = { first: [{ open: false }, { open: false }], second: [{ open: false }] };
+  const buttons = Object.keys(groups).map(id => ({ dataset: { detailsTarget: id }, textContent: '' }));
+  const document = {
+    querySelectorAll() { return buttons; },
+    getElementById(id) { return { querySelectorAll() { return groups[id]; } }; }
+  };
+  vm.runInNewContext(match[0] + '\nupdatePlanDetailControls();', { document });
+  assert.equal(buttons[0].textContent, '全部展开');
+  buttons[0].onclick();
+  assert.equal(groups.first.every(item => item.open), true);
+  assert.equal(groups.second[0].open, false);
+  assert.equal(buttons[0].textContent, '全部收起');
+  groups.first[0].open = false;
+  groups.first[0].ontoggle();
+  assert.equal(buttons[0].textContent, '全部展开');
+  buttons[0].onclick();
+  buttons[0].onclick();
+  assert.equal(groups.first.every(item => !item.open), true);
 });
 
 test('菜单保留管理员明确下发的选择和热量等级，无效等级不透传', () => {

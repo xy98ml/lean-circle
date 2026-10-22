@@ -215,10 +215,19 @@
     .plan-summary ul { display: grid; gap: 16px; list-style: none; padding: 0; margin: 16px 0 0; }
     .plan-summary li span { display: block; color: var(--muted); font-size: 12px; margin-bottom: 4px; }
     .plan-summary li strong { display: block; font-size: 17px; line-height: 1.5; }
-    .plan-detail-sections { display: grid; gap: 16px; }
-    .plan-detail-section { padding: 18px 20px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
-    .plan-detail-section p, .plan-note-text { margin: 0; white-space: pre-line; font-size: 14px; line-height: 1.85; color: var(--muted); overflow-wrap: anywhere; }
-    .plan-detail-section ul { display: grid; gap: 9px; padding-left: 20px; margin: 0; font-size: 14px; line-height: 1.85; }
+    .plan-detail-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .plan-detail-heading h3 { margin: 0; }
+    .plan-detail-toggle { border: 0; padding: 6px 0; color: var(--primary); background: transparent; font: inherit; font-size: 13px; cursor: pointer; white-space: nowrap; }
+    .plan-detail-sections { display: grid; gap: 10px; }
+    .plan-detail-section { min-width: 0; padding: 0 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+    .plan-detail-section > summary { display: grid; grid-template-columns: minmax(0, auto) minmax(0, 1fr) 18px; align-items: center; gap: 10px; min-height: 58px; cursor: pointer; list-style: none; }
+    .plan-detail-section > summary::-webkit-details-marker { display: none; }
+    .plan-detail-section > summary::after { content: '+'; color: var(--muted); text-align: center; font-size: 18px; }
+    .plan-detail-section[open] > summary::after { content: '−'; }
+    .plan-detail-section h4 { margin: 0; font-size: 14px; }
+    .plan-detail-preview { min-width: 0; overflow: hidden; color: var(--muted); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+    .plan-detail-section ul { display: grid; gap: 8px; padding: 0 0 16px 20px; margin: 0; font-size: 14px; line-height: 1.8; overflow-wrap: anywhere; }
+    .plan-detail-section .plan-note-text { padding: 0 0 16px; margin: 0; white-space: pre-line; font-size: 14px; line-height: 1.85; color: var(--muted); overflow-wrap: anywhere; }
     @media (max-width: 760px) { .plan-reading-layout { grid-template-columns: 1fr; gap: 18px; } .plan-summary ul { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     .icon-box { width: 38px; height: 38px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 12px; background: var(--surface-2); font-size: 18px; }
     .metric-label { color: var(--muted); font-size: 13px; }
@@ -516,7 +525,7 @@
         </div>
         <div class="plan-reading-layout" id="memberPlanDetails" style="margin-top:24px">
           <aside class="plan-summary"><h3>执行总结</h3><p class="subtle">先看目标，再按右侧建议安排</p><ul id="planQuickSummary"></ul></aside>
-          <div><h3>详细说明</h3><div class="plan-detail-sections" id="planNutritionDetails"></div><section class="plan-detail-section" style="margin-top:16px"><h4>训练怎么安排</h4><p class="plan-note-text" id="planTrainingDetails">等待管理员发布</p></section></div>
+          <div><div class="plan-detail-heading"><h3>详细说明</h3><button class="plan-detail-toggle" type="button" data-details-target="planNutritionDetails">全部展开</button></div><div class="plan-detail-sections" id="planNutritionDetails"></div><div class="plan-detail-heading" style="margin-top:20px"><h3>训练安排</h3><button class="plan-detail-toggle" type="button" data-details-target="planTrainingDetailSections">全部展开</button></div><div class="plan-detail-sections" id="planTrainingDetailSections"><details class="plan-detail-section"><summary><h4>训练怎么安排</h4><span class="plan-detail-preview">等待管理员发布</span></summary><p class="plan-note-text" id="planTrainingDetails">等待管理员发布</p></details></div></div>
         </div>
       </article>
 
@@ -603,7 +612,7 @@
         </article>
       </div>
 
-      <article class="card is-hidden" id="personalNutritionCard" style="margin-top:16px"><div class="plan-reading-layout"><aside class="plan-summary"><h3>饮食总结</h3><p class="subtle">一天的核心目标</p><ul id="nutritionQuickSummary"></ul></aside><div><h3>食物与执行细节</h3><div class="plan-detail-sections" id="personalNutritionAdvice"></div></div></div></article>
+      <article class="card is-hidden" id="personalNutritionCard" style="margin-top:16px"><div class="plan-reading-layout"><aside class="plan-summary"><h3>饮食总结</h3><p class="subtle">一天的核心目标</p><ul id="nutritionQuickSummary"></ul></aside><div><div class="plan-detail-heading"><h3>食物与执行细节</h3><button class="plan-detail-toggle" type="button" data-details-target="personalNutritionAdvice">全部展开</button></div><div class="plan-detail-sections" id="personalNutritionAdvice"></div></div></div></article>
 
       <div class="grid three" style="margin-top:16px">
         <article class="card"><div class="card-head"><div><h3>家庭餐</h3><p>按餐盘比例组合</p></div><span class="status good">优先</span></div><ul class="rule-list"><li>一掌半至两掌低脂蛋白质</li><li>一拳至一拳半主食</li><li>两拳不同颜色的蔬菜</li><li>调味油与酱汁单独估算</li></ul></article>
@@ -964,6 +973,27 @@
         if (!signedIn) setCloudState(navigator.onLine ? 'local' : 'offline');
       }
 
+      function updatePlanDetailControls() {
+        document.querySelectorAll('.plan-detail-toggle').forEach(button => {
+          const container = document.getElementById(button.dataset.detailsTarget);
+          const details = () => Array.from(container.querySelectorAll('details'));
+          const updateLabel = () => { button.textContent = details().length && details().every(item => item.open) ? '全部收起' : '全部展开'; };
+          button.onclick = () => {
+            const expand = details().some(item => !item.open);
+            details().forEach(item => { item.open = expand; });
+            updateLabel();
+          };
+          details().forEach(item => { item.ontoggle = updateLabel; });
+          updateLabel();
+        });
+      }
+
+      function setPlanDetailMessage(containerId, title, message) {
+        const safeMessage = escapeHTML(message);
+        document.getElementById(containerId).innerHTML = `<details class="plan-detail-section"><summary><h4>${escapeHTML(title)}</h4><span class="plan-detail-preview">${safeMessage}</span></summary><p class="plan-note-text">${safeMessage}</p></details>`;
+        updatePlanDetailControls();
+      }
+
       function renderPersonalPlanDetails(version) {
         const formatAdvice = text => String(text || '').split(/\n\s*\n/).map((paragraph, index) => {
           const headings = [
@@ -973,7 +1003,9 @@
           ];
           const title = headings.find(([pattern]) => pattern.test(paragraph.trim()))?.[1] || `饮食建议 ${index + 1}`;
           const sentences = paragraph.trim().match(/[^。！？\n]+[。！？]?/g) || [];
-          return sentences.length ? `<section class="plan-detail-section"><h4>${title}</h4><ul>${sentences.map(sentence => `<li>${escapeHTML(sentence.trim())}</li>`).join('')}</ul></section>` : '';
+          if (!sentences.length) return '';
+          const preview = sentences[0].trim();
+          return `<details class="plan-detail-section"><summary><h4>${title}</h4><span class="plan-detail-preview">${escapeHTML(preview)}</span></summary><ul>${sentences.map(sentence => `<li>${escapeHTML(sentence.trim())}</li>`).join('')}</ul></details>`;
         }).join('');
         const summary = version ? [
           ['每日热量', `${version.calories_min}–${version.calories_max} kcal`],
@@ -987,6 +1019,10 @@
         document.getElementById('nutritionQuickSummary').innerHTML = summary;
         const advice = formatAdvice(version?.nutrition_notes);
         document.getElementById('planNutritionDetails').innerHTML = advice;
+        const trainingNote = version?.training_plan?.note || '等待管理员发布具体训练安排。';
+        document.getElementById('planTrainingDetails').textContent = trainingNote;
+        document.querySelector('#planTrainingDetailSections .plan-detail-preview').textContent = trainingNote;
+        document.querySelector('#planTrainingDetailSections details').open = false;
         const week = Array.isArray(version?.training_plan?.week) ? version.training_plan.week : [];
         const labels = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
         document.getElementById('trainingWeek').innerHTML = labels.map((label, index) => {
@@ -995,6 +1031,7 @@
         }).join('');
         document.getElementById('trainingPlanNote').textContent = version?.training_plan?.note || '';
         document.getElementById('personalNutritionAdvice').innerHTML = advice;
+        updatePlanDetailControls();
         document.getElementById('personalNutritionCard').classList.toggle('is-hidden', !version?.nutrition_notes);
         document.getElementById('nutritionFiber').textContent = version?.fiber_target ? `膳食纤维目标：${version.fiber_target} g / 天` : '';
       }
@@ -1023,7 +1060,9 @@
           document.getElementById('memberPlanVersion').textContent = '安全提示';
           ['planCalories', 'planProtein', 'planSteps', 'planTraining'].forEach(id => { document.getElementById(id).textContent = '—'; });
           document.getElementById('planTrainingDetails').textContent = '先暂停新增训练压力，并向医生或合格专业人士确认。';
-          document.getElementById('planNutritionDetails').textContent = '不要继续扩大热量缺口；如有异常症状请及时就医。';
+          document.querySelector('#planTrainingDetailSections .plan-detail-preview').textContent = '先暂停新增训练压力，并向医生或合格专业人士确认。';
+          document.querySelector('#planTrainingDetailSections details').open = true;
+          setPlanDetailMessage('planNutritionDetails', '安全提醒', '不要继续扩大热量缺口；如有异常症状请及时就医。');
           document.getElementById('metricProteinTarget').textContent = '/ 已暂停';
           document.getElementById('metricStepsTarget').textContent = '/ 已暂停';
           document.getElementById('nutritionCalories').textContent = '—';
@@ -1044,8 +1083,7 @@
             document.getElementById('memberPlanTitle').textContent = '个性化计划正在设计';
             document.getElementById('memberPlanReason').textContent = '你可以先记录执行情况，管理员发布后这里会自动更新。';
             document.getElementById('memberPlanVersion').textContent = request.status === 'designing' ? '设计中' : '待设计';
-            document.getElementById('planTrainingDetails').textContent = '等待管理员发布具体训练安排。';
-            document.getElementById('planNutritionDetails').textContent = '等待管理员发布具体饮食建议。';
+            setPlanDetailMessage('planNutritionDetails', '饮食建议', '等待管理员发布具体饮食建议。');
           }
           return;
         }
@@ -1083,7 +1121,6 @@
         document.getElementById('planProtein').textContent = `${version.protein_min}–${version.protein_max}`;
         document.getElementById('planSteps').textContent = Number(version.steps_target).toLocaleString('zh-CN');
         document.getElementById('planTraining').textContent = `${version.strength_days} + ${version.cardio_sessions}`;
-        document.getElementById('planTrainingDetails').textContent = version.training_plan?.note || '按当前训练频率稳定执行。';
         document.getElementById('metricProteinTarget').textContent = `/ ${proteinTarget} g`;
         document.getElementById('metricStepsTarget').textContent = `/ ${version.steps_target}`;
         document.getElementById('nutritionCalories').textContent = calorieTarget;
